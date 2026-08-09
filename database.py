@@ -1,16 +1,17 @@
 import os
+import urllib.parse
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Load the secret environment variables from the .env file
 load_dotenv()
 
-# Safely fetch the password from your machine's environment
 DB_PASSWORD = os.getenv("DATABASE_PASSWORD")
 
-# Dynamically insert the password into your connection string
-DATABASE_URL = f"postgresql://postgres:{DB_PASSWORD}@localhost:5432/school_management"
+# This is the line that converts the '@' symbol safely
+ENCODED_PASSWORD = urllib.parse.quote_plus(DB_PASSWORD)
+
+DATABASE_URL = f"postgresql://postgres:{ENCODED_PASSWORD}@localhost:5432/school_database"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -1,6 +1,11 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
+from typing import List
+from database import get_db, engine
+import models
+import schemas # Import your new validation layout
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -8,11 +13,11 @@ app = FastAPI()
 def read_root():
     return {"status": "success", "message": "School Management API is online!"}
 
-@app.get("/api/db-test")
-def test_db_connection(db: Session = Depends(get_db)):
-    # This executes a simple check against your PostgreSQL database
-    try:
-        db.execute("SELECT 1")
-        return {"status": "success", "database": "Connected successfully!"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+# NEW ROUTE: Fetch all students from the database safely validated by your Schema
+@app.get("/api/students", response_model=List[schemas.StudentResponse])
+def get_all_students(db: Session = Depends(get_db)):
+    # 1. Query all records inside the postgres 'students' table
+    students = db.query(models.Student).all()
+    
+    # 2. FastAPI automatically passes this through StudentResponse schemas
+    return students
